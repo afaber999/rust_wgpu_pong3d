@@ -1,5 +1,5 @@
 
-use wgpu::RenderPipeline;
+use std::default;
 
 use winit::{
     event::*,
@@ -17,28 +17,19 @@ struct State {
     config: wgpu::SurfaceConfiguration,
     size: winit::dpi::PhysicalSize<u32>,
     render_pipeline : wgpu::RenderPipeline,
-    // The window must be declared after the surface so
-    // it gets dropped after it as the surface contains
-    // unsafe references to the window's resources.
     window: Window,
 }
 
 impl State {
-    // Creating some of the wgpu types requires async code
+
     async fn new(window: Window) -> Self {
         let size = window.inner_size();
 
-        // The instance is a handle to our GPU
-        // Backends::all => Vulkan + Metal + DX12 + Browser WebGPU
         let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
             backends: wgpu::Backends::all(),
             ..Default::default()
         });
         
-        // # Safety
-        //
-        // The surface needs to live as long as the window that created it.
-        // State owns the window, so this should be safe.
         let surface = unsafe { instance.create_surface(&window) }.unwrap();
 
         let adapter = instance.request_adapter(
@@ -52,8 +43,6 @@ impl State {
          let (device, queue) = adapter.request_device(
             &wgpu::DeviceDescriptor {
                 features: wgpu::Features::empty(),
-                // WebGL doesn't support all of wgpu's features, so if
-                // we're building for the web, we'll have to disable some.
                 limits: if cfg!(target_arch = "wasm32") {
                     wgpu::Limits::downlevel_webgl2_defaults()
                 } else {
@@ -65,9 +54,6 @@ impl State {
         ).await.unwrap();
 
         let surface_caps = surface.get_capabilities(&adapter);
-        // Shader code in this tutorial assumes an sRGB surface texture. Using a different
-        // one will result in all the colors coming out darker. If you want to support non
-        // sRGB surfaces, you'll need to account for that when drawing to the frame.
         let surface_format = surface_caps.formats.iter()
             .copied()
             .filter(|f| f.is_srgb())
@@ -84,50 +70,29 @@ impl State {
         };
         surface.configure(&device, &config);
 
-
         let shader = device.create_shader_module(wgpu::include_wgsl!("./shaders/UnlitMaterialShader.wgsl"));
-
-        let render_pipeline_layout =
-        device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
-            label: Some("Render Pipeline Layout"),
-            bind_group_layouts: &[],
-            push_constant_ranges: &[],
-        });
-     
 
         let render_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
             label: Some("Unlit render pipeline"),
-            layout: Some(&render_pipeline_layout),
+            layout: Default::default(),
             vertex: wgpu::VertexState {
                 module: &shader,
                 entry_point: "unlit_material_vs",
                 buffers: &[],
             },
-            fragment: Some(wgpu::FragmentState { // 3. Since fragment shader is optional, needs to be wrapped in Some
+            fragment: Some(wgpu::FragmentState {
                 module: &shader,
                 entry_point: "unlit_material_fs",
-                targets: &[Some(wgpu::ColorTargetState { // 4. output color data to surface, replace old colors
+                targets: &[Some(wgpu::ColorTargetState {
                     format: config.format,
                     blend: Some(wgpu::BlendState::REPLACE),
                     write_mask: wgpu::ColorWrites::ALL,
                 })],
             }),
-            primitive: wgpu::PrimitiveState {
-                topology: wgpu::PrimitiveTopology::TriangleList,
-                strip_index_format: None,
-                front_face: wgpu::FrontFace::Ccw,
-                cull_mode: Some(wgpu::Face::Back),  // cull back face
-                polygon_mode: wgpu::PolygonMode::Fill,
-                unclipped_depth: false,
-                conservative: false,
-            },
-            depth_stencil: None,
-            multisample: wgpu::MultisampleState {
-                count: 1,
-                mask: !0,
-                alpha_to_coverage_enabled: false,
-            },
-            multiview: None,
+            primitive: Default::default(), 
+            depth_stencil: Default::default(),
+            multisample: Default::default(),
+            multiview: Default::default(),
         });
 
         Self {
@@ -195,7 +160,7 @@ impl State {
             render_pass.set_pipeline(&self.render_pipeline); // setup renderpipeline
             render_pass.draw(0..3, 0..1); // draw 3 vertices with pipeline
         }
-        
+
         // submit will accept anything that implements IntoIter
         self.queue.submit(std::iter::once(encoder.finish()));
         output.present();
