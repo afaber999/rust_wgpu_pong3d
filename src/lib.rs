@@ -8,13 +8,17 @@ use winit::{
 
 use winit::window::Window;
 
+pub mod renderers;
+
 struct State {
     surface: wgpu::Surface,
     device: wgpu::Device,
     queue: wgpu::Queue,
     config: wgpu::SurfaceConfiguration,
     size: winit::dpi::PhysicalSize<u32>,
-    render_pipeline : wgpu::RenderPipeline,
+
+    renderer : renderers::unlit_material::UnlitMaterial,
+    //render_pipeline : wgpu::RenderPipeline,
     window: Window,
 }
 
@@ -68,38 +72,14 @@ impl State {
         };
         surface.configure(&device, &config);
 
-        let shader = device.create_shader_module(wgpu::include_wgsl!("./shaders/UnlitMaterialShader.wgsl"));
-
-        let render_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
-            label: Some("Unlit render pipeline"),
-            layout: Default::default(),
-            vertex: wgpu::VertexState {
-                module: &shader,
-                entry_point: "unlit_material_vs",
-                buffers: &[],
-            },
-            fragment: Some(wgpu::FragmentState {
-                module: &shader,
-                entry_point: "unlit_material_fs",
-                targets: &[Some(wgpu::ColorTargetState {
-                    format: config.format,
-                    blend: Some(wgpu::BlendState::REPLACE),
-                    write_mask: wgpu::ColorWrites::ALL,
-                })],
-            }),
-            primitive: Default::default(), 
-            depth_stencil: Default::default(),
-            multisample: Default::default(),
-            multiview: Default::default(),
-        });
-
+        let renderer = renderers::unlit_material::UnlitMaterial::new(&device, config.format);
         Self {
             surface,
             device,
             queue,
             config,
             size,
-            render_pipeline,
+            renderer,
             window,
         }
     }
@@ -155,7 +135,7 @@ impl State {
                 occlusion_query_set: None,
                 timestamp_writes: None,
             });
-            render_pass.set_pipeline(&self.render_pipeline); // setup renderpipeline
+            render_pass.set_pipeline(&self.renderer.render_pipeline); // setup renderpipeline
             render_pass.draw(0..3, 0..1); // draw 3 vertices with pipeline
         }
 
