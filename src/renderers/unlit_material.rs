@@ -36,5 +36,9 @@ impl UnlitMaterial {
         }
     }
 
+    pub fn draw<'a>( &'a self, render_pass: &mut wgpu::RenderPass<'a> ) {
+        render_pass.set_pipeline(&self.render_pipeline); // setup renderpipeline
+        render_pass.draw(0..3, 0..1); // draw 3 vertices with pipeline    
+    }
 
 }

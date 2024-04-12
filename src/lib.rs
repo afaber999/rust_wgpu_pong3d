@@ -135,8 +135,8 @@ impl State {
                 occlusion_query_set: None,
                 timestamp_writes: None,
             });
-            render_pass.set_pipeline(&self.renderer.render_pipeline); // setup renderpipeline
-            render_pass.draw(0..3, 0..1); // draw 3 vertices with pipeline
+
+            self.renderer.draw(&mut render_pass);
         }
 
         // submit will accept anything that implements IntoIter
