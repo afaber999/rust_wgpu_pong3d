@@ -24,10 +24,13 @@ impl Vertex {
 
 // create array with position and color data
 pub const QUAD: &[Vertex] = &[
-    Vertex { position: [-0.5, -0.5, 0.0], },    // 0
-    Vertex { position: [ 0.5, -0.5, 0.0], },    // 1
-    Vertex { position: [ 0.5,  0.5, 0.0], },    // 2
-    //Vertex { position: [-0.5,  0.5, 0.0], },    // 3
+    Vertex { position: [-0.5, -0.5, 0.0], },    // bottom left
+    Vertex { position: [-0.5,  0.5, 0.0], },    // top left
+    Vertex { position: [ 0.5, -0.5, 0.0], },    // bottom right
+
+    Vertex { position: [-0.5,  0.5, 0.0], },    // top left
+    Vertex { position: [ 0.5,  0.5, 0.0], },    // top right
+    Vertex { position: [ 0.5, -0.5, 0.0], },    // bottom right
 ];
 
 // impl Quad {
