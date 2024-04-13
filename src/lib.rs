@@ -12,7 +12,7 @@ pub mod buffers;
 pub mod geometries;
 pub mod renderers;
 
-use geometries::QUAD;
+use geometries::QuadGeometry;
 
 
 struct State {
@@ -77,7 +77,12 @@ impl State {
         };
         surface.configure(&device, &config);
 
-        let renderer = renderers::unlit_material::UnlitMaterial::new(&device, config.format, QUAD);
+        let geo = QuadGeometry::new();
+        let renderer = renderers::unlit_material::UnlitMaterial::new(
+                &device, 
+                config.format, 
+                geo.vertices,
+                geo.indices);
 
         Self {
             surface,

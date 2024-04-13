@@ -23,39 +23,29 @@ impl Vertex {
 }    
 
 // create array with position and color data
-pub const QUAD: &[Vertex] = &[
+pub const QUAD_VERTICES: &[Vertex] = &[
     Vertex { position: [-0.5, -0.5, 0.0], },    // bottom left
     Vertex { position: [-0.5,  0.5, 0.0], },    // top left
     Vertex { position: [ 0.5, -0.5, 0.0], },    // bottom right
-
-    Vertex { position: [-0.5,  0.5, 0.0], },    // top left
     Vertex { position: [ 0.5,  0.5, 0.0], },    // top right
-    Vertex { position: [ 0.5, -0.5, 0.0], },    // bottom right
 ];
 
-// impl Quad {
-//     pub fn new() -> Self {
-//         Self {
-//             positions : [
-//                 -0.5,-0.5, 0.0,
-//                 -0.5, 0.5, 0.0,
-//                  0.5,-0.5, 0.0, ],
-//         }
-//     }
-// }
+pub const QUAD_INDICES: &[u32] = &[
+    0, 1, 2,
+    1, 3, 2,
+];
 
-// #[repr(C)]
-// #[derive(Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
-// struct Vertex {
-//     position: [f32; 3],
-//     tex_coords: [f32; 2], // CHANGED FOR TEXTURE
-// }
 
-// // create array with position and color data
-// #[allow(dead_code)]
-// const QUAD1: &[Vertex] = &[
-//     Vertex { position: [-0.5, -0.5, 0.0], tex_coords: [0.0, 1.0] },    // 0   CHANGED COORDS FOR TEXTURE
-//     Vertex { position: [ 0.5, -0.5, 0.0], tex_coords: [1.0, 1.0] },    // 1
-//     Vertex { position: [ 0.5,  0.5, 0.0], tex_coords: [1.0, 0.0] },    // 2
-//     Vertex { position: [-0.5,  0.5, 0.0], tex_coords: [0.0, 0.0] },    // 3
-// ];
+pub struct QuadGeometry<'a> {
+    pub vertices : &'a[Vertex],
+    pub indices : &'a[u32],
+}
+
+impl<'a> QuadGeometry<'a> {
+    pub fn new() -> Self {
+        Self {
+            vertices : &QUAD_VERTICES,
+            indices : &QUAD_INDICES,
+        }
+    }
+}
