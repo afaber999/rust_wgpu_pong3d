@@ -8,7 +8,12 @@ use winit::{
 
 use winit::window::Window;
 
+pub mod buffers;
+pub mod geometries;
 pub mod renderers;
+
+use geometries::QUAD;
+
 
 struct State {
     surface: wgpu::Surface,
@@ -72,7 +77,8 @@ impl State {
         };
         surface.configure(&device, &config);
 
-        let renderer = renderers::unlit_material::UnlitMaterial::new(&device, config.format);
+        let renderer = renderers::unlit_material::UnlitMaterial::new(&device, config.format, QUAD);
+
         Self {
             surface,
             device,

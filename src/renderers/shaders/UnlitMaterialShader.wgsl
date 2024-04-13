@@ -1,18 +1,15 @@
+struct VsInput {
+    @location(0) position : vec3f,
+}
+
 struct VsOutput {
     @builtin(position) position : vec4f
 }
 
 @vertex
-fn unlit_material_vs( @builtin(vertex_index) idx:u32 ) -> VsOutput {
-
-    var position : array<vec4f, 3 > = array (
-        vec4f(-0.5,-0.5, 0.0, 1.0),
-        vec4f(-0.5, 0.5, 0.0, 1.0),
-        vec4f( 0.5,-0.5, 0.0, 1.0),
-    );
-
+fn unlit_material_vs( in : VsInput ) -> VsOutput {
     var out : VsOutput;
-    out.position = position[idx];
+    out.position = vec4f(in.position, 1.0);
     return out;
 }
 
