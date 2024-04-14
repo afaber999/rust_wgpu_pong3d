@@ -1,26 +1,41 @@
 use wgpu::util::DeviceExt;
-
-use super::super::geometries::Vertex;
+use crate::geometries::{ColorElement, PositionElement};
+//use super::super::geometries::Vertex;
 
 #[derive(Debug)]
 pub struct GeometryBuffer {
-    pub vertex_buffer : wgpu::Buffer,
+    pub position_buffer : wgpu::Buffer,
+    pub color_buffer : wgpu::Buffer,
     pub index_buffer : Option<wgpu::Buffer>,
-    pub vertex_count : u32,
-    pub index_count : u32,
+    pub num_vertices : u32,
+    pub num_indices : u32,
+
 }
 
 impl GeometryBuffer {
-    pub fn new(device : &wgpu::Device, vertices : &[Vertex], indices : &[u32]) -> Self {
+    pub fn new(device : &wgpu::Device,
+         positions : &[PositionElement], 
+         colors : &[ColorElement],
+         indices : &[u32] ) -> Self {
+
         // create vertex buffer
-        let vertex_buffer = device.create_buffer_init(
+        let position_buffer = device.create_buffer_init(
             &wgpu::util::BufferInitDescriptor {
-                label: Some("Vertex Buffer"),
-                contents: bytemuck::cast_slice(vertices),
+                label: Some("Position Buffer"),
+                contents: bytemuck::cast_slice(positions),
                 usage: wgpu::BufferUsages::VERTEX,
             }
         );
-        let vertex_count = vertices.len() as u32;
+        let num_vertices = positions.len() as u32;
+
+        // create vertex buffer
+        let color_buffer = device.create_buffer_init(
+            &wgpu::util::BufferInitDescriptor {
+                label: Some("Color Buffer"),
+                contents: bytemuck::cast_slice(colors),
+                usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
+            }
+        );
         
         let mut index_buffer = if indices.len() > 0 {
             // create index buffer
@@ -34,19 +49,19 @@ impl GeometryBuffer {
             None
         };
 
-        let index_count = indices.len() as u32;
+        let num_indices = indices.len() as u32;
 
         Self {
-            vertex_buffer,
+            position_buffer,
+            color_buffer,
             index_buffer,
-            vertex_count,
-            index_count,
+            num_vertices,
+            num_indices,
         }
     }
 
-    pub fn vertex_buffer_desc() -> wgpu::VertexBufferLayout<'static> {
-        Vertex::desc()
-    }
-
+    // pub fn descriptors() -> &'static[ wgpu::VertexBufferLayout<'static> ] {
+    //     &[PositionElement::desc(), ColorElement::desc()]
+    // }
 }
 

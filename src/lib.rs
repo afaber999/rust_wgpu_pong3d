@@ -81,7 +81,8 @@ impl State {
         let renderer = renderers::unlit_material::UnlitMaterial::new(
                 &device, 
                 config.format, 
-                geo.vertices,
+                geo.positions,
+                geo.colors,
                 geo.indices);
 
         Self {
