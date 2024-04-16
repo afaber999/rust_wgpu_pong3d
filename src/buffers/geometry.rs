@@ -1,11 +1,12 @@
 use wgpu::util::DeviceExt;
-use crate::geometries::{ColorElement, PositionElement};
+use crate::geometries::{ColorElement, PositionElement, TexCoordElement};
 //use super::super::geometries::Vertex;
 
 #[derive(Debug)]
 pub struct GeometryBuffer {
     pub position_buffer : wgpu::Buffer,
     pub color_buffer : wgpu::Buffer,
+    pub texcoord_buffer : wgpu::Buffer,
     pub index_buffer : Option<wgpu::Buffer>,
     pub num_vertices : u32,
     pub num_indices : u32,
@@ -16,9 +17,10 @@ impl GeometryBuffer {
     pub fn new(device : &wgpu::Device,
          positions : &[PositionElement], 
          colors : &[ColorElement],
+         tex_coords : &[TexCoordElement],
          indices : &[u32] ) -> Self {
 
-        // create vertex buffer
+        // create vertex buffer for positions
         let position_buffer = device.create_buffer_init(
             &wgpu::util::BufferInitDescriptor {
                 label: Some("Position Buffer"),
@@ -28,7 +30,7 @@ impl GeometryBuffer {
         );
         let num_vertices = positions.len() as u32;
 
-        // create vertex buffer
+        // create vertex buffer for colors
         let color_buffer = device.create_buffer_init(
             &wgpu::util::BufferInitDescriptor {
                 label: Some("Color Buffer"),
@@ -36,8 +38,17 @@ impl GeometryBuffer {
                 usage: wgpu::BufferUsages::VERTEX | wgpu::BufferUsages::COPY_DST,
             }
         );
-        
-        let mut index_buffer = if indices.len() > 0 {
+
+        // create vertex buffer for tex_coords
+        let texcoord_buffer = device.create_buffer_init(
+            &wgpu::util::BufferInitDescriptor {
+                label: Some("TexCoord Buffer"),
+                contents: bytemuck::cast_slice(tex_coords),
+                usage: wgpu::BufferUsages::VERTEX,
+            }
+        );
+      
+        let index_buffer = if indices.len() > 0 {
             // create index buffer
             Some( device.create_buffer_init(
         &wgpu::util::BufferInitDescriptor {
@@ -53,6 +64,7 @@ impl GeometryBuffer {
 
         Self {
             position_buffer,
+            texcoord_buffer,
             color_buffer,
             index_buffer,
             num_vertices,

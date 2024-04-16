@@ -8,9 +8,11 @@ use winit::{
 
 use winit::window::Window;
 
+pub mod errors;
 pub mod buffers;
 pub mod geometries;
 pub mod renderers;
+pub mod texture2d;
 
 use geometries::QuadGeometry;
 
@@ -80,9 +82,11 @@ impl State {
         let geo = QuadGeometry::new();
         let renderer = renderers::unlit_material::UnlitMaterial::new(
                 &device, 
+                &queue,
                 config.format, 
                 geo.positions,
                 geo.colors,
+                geo.tex_coords,
                 geo.indices);
 
         Self {
