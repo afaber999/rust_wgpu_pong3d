@@ -81,10 +81,10 @@ pub const QUAD_COLORS: &[ColorElement] = &[
 ];
 
 pub const QUAD_TEXCOORDS: &[TexCoordElement] = &[
-    TexCoordElement { position: [0.0, 0.0] },    // bottom left
-    TexCoordElement { position: [0.0, 1.0] },    // top left
-    TexCoordElement { position: [1.0, 0.0] },    // bottom right
-    TexCoordElement { position: [1.0, 1.0] },    // top right
+    TexCoordElement { position: [0.0, 1.0] },    // bottom left
+    TexCoordElement { position: [0.0, 0.0] },    // top left
+    TexCoordElement { position: [1.0, 1.0] },    // bottom right
+    TexCoordElement { position: [1.0, 0.0] },    // top right
 ];
 
 
