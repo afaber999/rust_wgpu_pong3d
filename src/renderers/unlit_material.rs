@@ -1,7 +1,10 @@
 use glam::{Mat4, Vec2, Vec3, Vec4};
-
-use crate::{buffers::{geometry::GeometryBuffer, uniform::{UniformBufferData, UniformBuffer}}, geometries::{ColorElement, PositionElement, TexCoordElement}, texture2d::Texture2d};
-
+use crate::{
+    buffers::{geometry::GeometryBuffer, uniform::UniformBuffer},
+    camera::Camera, 
+    geometries::{ColorElement, PositionElement, TexCoordElement},
+    texture2d::Texture2d
+};
 
 #[derive(Debug)]
 pub struct UnlitMaterial{
@@ -25,9 +28,8 @@ impl UnlitMaterial {
                 positions : &[PositionElement],
                 colors : &[ColorElement],
                 tex_coords : &[TexCoordElement],
-                indices : &[u32]) -> Self {
-
-
+                indices : &[u32],
+                camera : &Camera) -> Self {
 
         let shader = device.create_shader_module(wgpu::include_wgsl!("./shaders/UnlitMaterialShader.wgsl"));
         let geometry_buffer = GeometryBuffer::new(&device, positions, colors, tex_coords, indices);
@@ -37,7 +39,7 @@ impl UnlitMaterial {
         // 
         let texture_tiling_buffer = UniformBuffer::new(
             &device, 
-            Vec2::new(1.0,3.0), 
+            Vec2::new(1.0,1.0), 
             Some("Vertex texture tiling uniform buffer"));
 
         let model_matrix_buffer = UniformBuffer::new(
@@ -182,8 +184,9 @@ impl UnlitMaterial {
                 label: Some("Render Pipeline Layout"),
                 bind_group_layouts: &[
                     &vs_uniforms_group_layout,      // bind group 0
-                    &texture_bind_group_layout,     // bind group 1
-                    &diffuse_color_group_layout,    // bind group 2
+                    &camera.bind_group_layout,      // bind group 1
+                    &texture_bind_group_layout,     // bind group 2
+                    &diffuse_color_group_layout,    // bind group 3
                 ],    
                 push_constant_ranges: &[],
             }
@@ -235,19 +238,23 @@ impl UnlitMaterial {
         //self.textiling_buffer.update(queue);
 
         //self.model_matrix_buffer.data.translate(0.5, 1.0, 0.0);
-        let trans = Mat4::from_translation(Vec3::new(0.3, 0.5, 0.0));
-        let rot = Mat4::from_axis_angle(Vec3::AXES[2], 20.0_f32.to_degrees() );
-        let scale = Mat4::from_scale(Vec3::new(2.0,0.4,1.0));
-        self.model_matrix_buffer.data =  trans * rot * scale;
+        let trans = Mat4::from_translation(Vec3::new(-0.5, 0.0, 0.0));
+        // let rot = Mat4::from_axis_angle(Vec3::AXES[2], 20.0_f32.to_degrees() );
+        // let scale = Mat4::from_scale(Vec3::new(2.0,0.4,1.0));
+        // self.model_matrix_buffer.data =  trans * rot * scale;
+        self.model_matrix_buffer.data =  trans;
 
         self.model_matrix_buffer.update(queue);
+
     }
 
-    pub fn draw<'a>( &'a self, render_pass: &mut wgpu::RenderPass<'a> ) {
+    pub fn draw<'a>( &'a self, render_pass: &mut wgpu::RenderPass<'a>, camera:&'a Camera ) {
         render_pass.set_pipeline(&self.render_pipeline); // setup renderpipeline
         render_pass.set_bind_group(0, &self.vs_uniforms_bind_group, &[]);
-        render_pass.set_bind_group(1, &self.diffuse_bind_group, &[]);
-        render_pass.set_bind_group(2, &self.diffuse_color_bind_group, &[]);
+        camera.draw(render_pass, 1);
+        //render_pass.set_bind_group(1, &self.camera.bind_groupdiffuse_bind_group, &[]);
+        render_pass.set_bind_group(2, &self.diffuse_bind_group, &[]);
+        render_pass.set_bind_group(3, &self.diffuse_color_bind_group, &[]);
         render_pass.set_vertex_buffer(0, self.geometry_buffer.position_buffer.slice(..));
         render_pass.set_vertex_buffer(1, self.geometry_buffer.color_buffer.slice(..));
         render_pass.set_vertex_buffer(2, self.geometry_buffer.texcoord_buffer.slice(..));

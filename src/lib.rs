@@ -1,5 +1,6 @@
 
 
+use camera::Camera;
 use winit::{
     event::*,
     event_loop::{ControlFlow, EventLoop},
@@ -14,6 +15,7 @@ pub mod buffers;
 pub mod geometries;
 pub mod renderers;
 pub mod texture2d;
+pub mod camera;
 
 use geometries::QuadGeometry;
 
@@ -25,6 +27,7 @@ struct State {
     config: wgpu::SurfaceConfiguration,
     size: winit::dpi::PhysicalSize<u32>,
 
+    camera : Camera,
     renderer : renderers::unlit_material::UnlitMaterial,
     //render_pipeline : wgpu::RenderPipeline,
     window: Window,
@@ -81,6 +84,13 @@ impl State {
         surface.configure(&device, &config);
 
         let geo = QuadGeometry::new();
+
+        let camera = Camera::new_orthographic(
+            &device,
+        -1.0,1.0,
+            -1.0,1.0,
+        0.0,1.0);
+
         let renderer = renderers::unlit_material::UnlitMaterial::new(
                 &device, 
                 &queue,
@@ -88,7 +98,8 @@ impl State {
                 geo.positions,
                 geo.colors,
                 geo.tex_coords,
-                geo.indices);
+                geo.indices,
+                &camera);
 
         Self {
             surface,
@@ -96,6 +107,7 @@ impl State {
             queue,
             config,
             size,
+            camera,
             renderer,
             window,
         }
@@ -120,6 +132,7 @@ impl State {
     }
 
     fn update(&mut self) {
+        self.camera.update(&self.queue);
         self.renderer.update(&self.queue);
     }
 
@@ -154,7 +167,7 @@ impl State {
                 timestamp_writes: None,
             });
 
-            self.renderer.draw(&mut render_pass);
+            self.renderer.draw(&mut render_pass, &self.camera);
         }
 
         // submit will accept anything that implements IntoIter
