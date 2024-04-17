@@ -29,16 +29,11 @@ impl UnlitMaterial {
 
 
 
-        //let x = Vec3::new(1.0,2.0,3.1);
-        //dbg!(x.raw_view());
-
         let shader = device.create_shader_module(wgpu::include_wgsl!("./shaders/UnlitMaterialShader.wgsl"));
-
         let geometry_buffer = GeometryBuffer::new(&device, positions, colors, tex_coords, indices);
 
-
         //
-        // SETUP VERTEX UNIFROMS
+        // SETUP VERTEX UNIFORMS
         // 
         let texture_tiling_buffer = UniformBuffer::new(
             &device, 
@@ -133,8 +128,6 @@ impl UnlitMaterial {
             label :Some( "Unlit material diffuse color uniform buffer group"),
         });
 
-
-
         //
         // TEXTURE BINDING GROUP
         // 
@@ -188,7 +181,7 @@ impl UnlitMaterial {
             &wgpu::PipelineLayoutDescriptor {
                 label: Some("Render Pipeline Layout"),
                 bind_group_layouts: &[
-                    &vs_uniforms_group_layout,   // bind group 0
+                    &vs_uniforms_group_layout,      // bind group 0
                     &texture_bind_group_layout,     // bind group 1
                     &diffuse_color_group_layout,    // bind group 2
                 ],    
@@ -242,10 +235,10 @@ impl UnlitMaterial {
         //self.textiling_buffer.update(queue);
 
         //self.model_matrix_buffer.data.translate(0.5, 1.0, 0.0);
-        let trans = Mat4::from_translation(Vec3::new(0.3, 0.5, 0.0)).transpose();
+        let trans = Mat4::from_translation(Vec3::new(0.3, 0.5, 0.0));
         let rot = Mat4::from_axis_angle(Vec3::AXES[2], 20.0_f32.to_degrees() );
         let scale = Mat4::from_scale(Vec3::new(2.0,0.4,1.0));
-        self.model_matrix_buffer.data =  scale * rot * trans;
+        self.model_matrix_buffer.data =  trans * rot * scale;
 
         self.model_matrix_buffer.update(queue);
     }
