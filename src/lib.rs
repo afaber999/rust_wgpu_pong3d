@@ -8,6 +8,7 @@ use winit::{
 
 use winit::window::Window;
 
+pub mod math;
 pub mod errors;
 pub mod buffers;
 pub mod geometries;
@@ -119,6 +120,7 @@ impl State {
     }
 
     fn update(&mut self) {
+        self.renderer.update(&self.queue);
     }
 
     fn render(&mut self) -> Result<(), wgpu::SurfaceError> {

@@ -15,15 +15,17 @@ fn unlit_material_vs( in : VsInput ) -> VsOutput {
     var out : VsOutput;
     out.position = vec4f(in.position, 1.0);
     out.color = in.color;
-    out.texcoord = in.texcoord;
+    out.texcoord = in.texcoord * texture_tiling;
     return out;
 }
 
-
 @group(0) @binding(0)
+var<uniform> texture_tiling : vec2f;
+ 
+@group(1) @binding(0)
 var t_diffuse : texture_2d<f32>;
 
-@group(0) @binding(1)
+@group(1) @binding(1)
 var s_diffuse : sampler;
 
 @fragment
