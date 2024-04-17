@@ -1,12 +1,14 @@
-use crate::{buffers::{geometry::GeometryBuffer, uniform::UniformBuffer}, geometries::{ColorElement, PositionElement, TexCoordElement}, math::vec2::Vec2, texture2d::Texture2d};
+use crate::{buffers::{geometry::GeometryBuffer, uniform::UniformBuffer}, geometries::{ColorElement, PositionElement, TexCoordElement}, math::{vec2::Vec2, vec4::Vec4}, texture2d::Texture2d};
 
 #[derive(Debug)]
 pub struct UnlitMaterial{
     pub render_pipeline: wgpu::RenderPipeline,
     geometry_buffer : GeometryBuffer,
     textiling_buffer : UniformBuffer<Vec2>,
+    diffuse_color_buffer : UniformBuffer<Vec4>,
     diffuse_bind_group: wgpu::BindGroup,
     texture_tiling_bind_group : wgpu::BindGroup,
+    diffuse_color_bind_group: wgpu::BindGroup,
 }
 
 impl UnlitMaterial {
@@ -22,6 +24,10 @@ impl UnlitMaterial {
 
         let geometry_buffer = GeometryBuffer::new(&device, positions, colors, tex_coords, indices);
 
+
+        //
+        // TEXTURE TILING UNIFORM
+        // 
         let textiling_buffer = UniformBuffer::new(
             &device, 
             Vec2::new(4.0,5.0), 
@@ -58,6 +64,49 @@ impl UnlitMaterial {
         });
 
 
+        //
+        // DIFFUSE COLOR UNIFORM
+        // 
+        let diffuse_color_buffer = UniformBuffer::new(
+            &device, 
+            Vec4::new(1.0,0.0, 0.0,1.0), 
+            Some("diffuse color buffer"));
+
+
+        let diffuse_color_group_layout = 
+            device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
+                entries: &[
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 0,
+                        visibility: wgpu::ShaderStages::FRAGMENT,
+                        ty: wgpu::BindingType::Buffer {
+                            ty: wgpu::BufferBindingType::Uniform,
+                            has_dynamic_offset: false,
+                            min_binding_size: None,
+                        },                    
+                        count: None,                        
+                    }
+                ],
+                label :Some( "Unlit material diffuse color uniform layout group"),
+            }
+        );
+
+        let diffuse_color_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor{
+            layout: &diffuse_color_group_layout,
+            entries: &[
+                wgpu::BindGroupEntry {
+                    binding: 0,
+                    resource: diffuse_color_buffer.buffer.as_entire_binding(),
+                }
+            ],
+            label :Some( "Unlit material diffuse color uniform buffer group"),
+        });
+
+
+
+        //
+        // TEXTURE BINDING GROUP
+        // 
         let texture_bytes = include_bytes!("../assets/test_texture.png");
         let texture = Texture2d::from_bytes(&device, &queue, texture_bytes, "test_texture").expect("Texture");
 
@@ -109,7 +158,9 @@ impl UnlitMaterial {
                 label: Some("Render Pipeline Layout"),
                 bind_group_layouts: &[
                     &texture_tiling_group_layout,   // bind group 0
-                    &texture_bind_group_layout],    // bind group 1
+                    &texture_bind_group_layout,     // bind group 1
+                    &diffuse_color_group_layout,    // bind group 2
+                ],    
                 push_constant_ranges: &[],
             }
         );
@@ -145,8 +196,10 @@ impl UnlitMaterial {
             render_pipeline,
             geometry_buffer,
             textiling_buffer,
+            diffuse_color_buffer,
             diffuse_bind_group,
             texture_tiling_bind_group,
+            diffuse_color_bind_group,
         }
     }
 
@@ -159,6 +212,7 @@ impl UnlitMaterial {
         render_pass.set_pipeline(&self.render_pipeline); // setup renderpipeline
         render_pass.set_bind_group(0, &self.texture_tiling_bind_group, &[]);
         render_pass.set_bind_group(1, &self.diffuse_bind_group, &[]);
+        render_pass.set_bind_group(2, &self.diffuse_color_bind_group, &[]);
         render_pass.set_vertex_buffer(0, self.geometry_buffer.position_buffer.slice(..));
         render_pass.set_vertex_buffer(1, self.geometry_buffer.color_buffer.slice(..));
         render_pass.set_vertex_buffer(2, self.geometry_buffer.texcoord_buffer.slice(..));

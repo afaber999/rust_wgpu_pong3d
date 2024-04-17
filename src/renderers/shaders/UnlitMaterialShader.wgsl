@@ -28,9 +28,12 @@ var t_diffuse : texture_2d<f32>;
 @group(1) @binding(1)
 var s_diffuse : sampler;
 
+@group(2) @binding(0)
+var<uniform> diffuse_color : vec4f;
+
 @fragment
 fn unlit_material_fs( in: VsOutput ) -> @location(0) vec4f {
     //return vec4f(in.texcoord.x,in.texcoord.y,0.0,1.0);
-    return textureSample(t_diffuse, s_diffuse, in.texcoord);
+    return textureSample(t_diffuse, s_diffuse, in.texcoord) * diffuse_color;
 //    return textureSample(t_diffuse, s_diffuse, in.texcoord);
 }
