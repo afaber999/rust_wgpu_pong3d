@@ -1,6 +1,5 @@
 use crate::buffers::uniform::UnformBufferData;
 
-
 #[repr(C)]
 #[derive(Default, Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct Vec4{
@@ -21,9 +20,4 @@ impl Vec4{
     }
 }
 
-
-impl UnformBufferData for Vec4 {
-    fn raw_view<'a>(&'a self) -> &'a[u8] {
-        bytemuck::bytes_of(self)
-    }
-}
+impl UnformBufferData for Vec4 {}

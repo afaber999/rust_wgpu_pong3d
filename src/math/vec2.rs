@@ -17,9 +17,5 @@ impl Vec2{
     }
 }
 
-
-impl UnformBufferData for Vec2 {
-    fn raw_view<'a>(&'a self) -> &'a[u8] {
-        bytemuck::bytes_of(self)
-    }
-}
+impl UnformBufferData for Vec2 {}
+ 

@@ -1,13 +1,17 @@
-use crate::{buffers::{geometry::GeometryBuffer, uniform::UniformBuffer}, geometries::{ColorElement, PositionElement, TexCoordElement}, math::{vec2::Vec2, vec4::Vec4}, texture2d::Texture2d};
+use crate::{buffers::{geometry::GeometryBuffer, uniform::{UnformBufferData, UniformBuffer}}, geometries::{ColorElement, PositionElement, TexCoordElement}, math::{mat4x4::Mat4x4, vec2::Vec2, vec4::Vec4}, texture2d::Texture2d};
+
 
 #[derive(Debug)]
 pub struct UnlitMaterial{
     pub render_pipeline: wgpu::RenderPipeline,
     geometry_buffer : GeometryBuffer,
-    textiling_buffer : UniformBuffer<Vec2>,
+
+    texture_tiling_buffer : UniformBuffer<Vec2>,
+    model_matrix_buffer : UniformBuffer<Mat4x4>,
+    vs_uniforms_bind_group : wgpu::BindGroup,
+
     diffuse_color_buffer : UniformBuffer<Vec4>,
     diffuse_bind_group: wgpu::BindGroup,
-    texture_tiling_bind_group : wgpu::BindGroup,
     diffuse_color_bind_group: wgpu::BindGroup,
 }
 
@@ -26,15 +30,20 @@ impl UnlitMaterial {
 
 
         //
-        // TEXTURE TILING UNIFORM
+        // SETUP VERTEX UNIFROMS
         // 
-        let textiling_buffer = UniformBuffer::new(
+        let texture_tiling_buffer = UniformBuffer::new(
             &device, 
-            Vec2::new(4.0,5.0), 
-            Some("TextureTiling buffer"));
+            Vec2::new(1.0,3.0), 
+            Some("Vertex texture tiling uniform buffer"));
 
+        let model_matrix_buffer = UniformBuffer::new(
+            &device, 
+            Mat4x4::new(), 
+            Some("Vertex model matrix uniform buffer"));
 
-        let texture_tiling_group_layout = 
+                
+        let vs_uniforms_group_layout = 
             device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
                 entries: &[
                     wgpu::BindGroupLayoutEntry {
@@ -46,21 +55,35 @@ impl UnlitMaterial {
                             min_binding_size: None,
                         },                    
                         count: None,                        
-                    }
+                    },
+                    wgpu::BindGroupLayoutEntry {
+                        binding: 1,
+                        visibility: wgpu::ShaderStages::VERTEX,
+                        ty: wgpu::BindingType::Buffer {
+                            ty: wgpu::BufferBindingType::Uniform,
+                            has_dynamic_offset: false,
+                            min_binding_size: None,
+                        },                    
+                        count: None,                        
+                    },
                 ],
-                label :Some( "Unlit material texture tiling uniform buffer layout group"),
+                label :Some( "Unlit material vs uniforms layout group"),
             }
         );
 
-        let texture_tiling_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor{
-            layout: &texture_tiling_group_layout,
+        let vs_uniforms_bind_group = device.create_bind_group(&wgpu::BindGroupDescriptor{
+            layout: &vs_uniforms_group_layout,
             entries: &[
                 wgpu::BindGroupEntry {
                     binding: 0,
-                    resource: textiling_buffer.buffer.as_entire_binding(),
-                }
+                    resource: model_matrix_buffer.buffer.as_entire_binding(),
+                },
+                wgpu::BindGroupEntry {
+                    binding: 1,
+                    resource: texture_tiling_buffer.buffer.as_entire_binding(),
+                },
             ],
-            label :Some( "Unlit material texture tiling uniform buffer group"),
+            label :Some( "Unlit material vs uniforms buffer group"),
         });
 
 
@@ -157,7 +180,7 @@ impl UnlitMaterial {
             &wgpu::PipelineLayoutDescriptor {
                 label: Some("Render Pipeline Layout"),
                 bind_group_layouts: &[
-                    &texture_tiling_group_layout,   // bind group 0
+                    &vs_uniforms_group_layout,   // bind group 0
                     &texture_bind_group_layout,     // bind group 1
                     &diffuse_color_group_layout,    // bind group 2
                 ],    
@@ -195,22 +218,28 @@ impl UnlitMaterial {
         Self {
             render_pipeline,
             geometry_buffer,
-            textiling_buffer,
+
+            texture_tiling_buffer,
+            model_matrix_buffer,
+            vs_uniforms_bind_group,
+
             diffuse_color_buffer,
             diffuse_bind_group,
-            texture_tiling_bind_group,
             diffuse_color_bind_group,
         }
     }
 
-    pub fn update(&mut self, _queue: &wgpu::Queue) {
+    pub fn update(&mut self, queue: &wgpu::Queue) {
         //self.textiling_buffer.data.x *= 1.01;
         //self.textiling_buffer.update(queue);
+
+        self.model_matrix_buffer.data.translate(0.5, 1.0, 0.0);
+        self.model_matrix_buffer.update(queue);
     }
 
     pub fn draw<'a>( &'a self, render_pass: &mut wgpu::RenderPass<'a> ) {
         render_pass.set_pipeline(&self.render_pipeline); // setup renderpipeline
-        render_pass.set_bind_group(0, &self.texture_tiling_bind_group, &[]);
+        render_pass.set_bind_group(0, &self.vs_uniforms_bind_group, &[]);
         render_pass.set_bind_group(1, &self.diffuse_bind_group, &[]);
         render_pass.set_bind_group(2, &self.diffuse_color_bind_group, &[]);
         render_pass.set_vertex_buffer(0, self.geometry_buffer.position_buffer.slice(..));

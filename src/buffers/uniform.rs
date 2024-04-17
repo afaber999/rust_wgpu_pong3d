@@ -1,7 +1,9 @@
 use wgpu::util::DeviceExt;
 
-pub trait UnformBufferData {
-    fn raw_view<'a>(&'a self) -> &'a[u8];
+pub trait UnformBufferData : bytemuck::Pod {
+    fn raw_view<'a>(&'a self) -> &'a[u8] {
+        bytemuck::bytes_of(self)
+    }
 }
 
 #[derive(Debug)]

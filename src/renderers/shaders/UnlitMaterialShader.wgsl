@@ -10,16 +10,11 @@ struct VsOutput {
     @location(2) texcoord : vec2f,
 }
 
-@vertex
-fn unlit_material_vs( in : VsInput ) -> VsOutput {
-    var out : VsOutput;
-    out.position = vec4f(in.position, 1.0);
-    out.color = in.color;
-    out.texcoord = in.texcoord * texture_tiling;
-    return out;
-}
 
 @group(0) @binding(0)
+var<uniform> model_matrix : mat4x4f;
+
+@group(0) @binding(1)
 var<uniform> texture_tiling : vec2f;
  
 @group(1) @binding(0)
@@ -30,6 +25,16 @@ var s_diffuse : sampler;
 
 @group(2) @binding(0)
 var<uniform> diffuse_color : vec4f;
+
+@vertex
+fn unlit_material_vs( in : VsInput ) -> VsOutput {
+    var out : VsOutput;
+    out.position = vec4f(in.position, 1.0) * model_matrix;
+    out.color = in.color;
+    out.texcoord = in.texcoord * texture_tiling;
+    return out;
+}
+
 
 @fragment
 fn unlit_material_fs( in: VsOutput ) -> @location(0) vec4f {
