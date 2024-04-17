@@ -1,18 +1,18 @@
 use wgpu::util::DeviceExt;
 
-pub trait UnformBufferData : bytemuck::Pod {
+pub trait UniformBufferData : bytemuck::Pod {
     fn raw_view<'a>(&'a self) -> &'a[u8] {
         bytemuck::bytes_of(self)
     }
 }
 
 #[derive(Debug)]
-pub struct UniformBuffer<T: UnformBufferData> {
+pub struct UniformBuffer<T: UniformBufferData> {
     pub data : T,
     pub buffer : wgpu::Buffer, 
 }
 
-impl<T: UnformBufferData> UniformBuffer<T> {
+impl<T: UniformBufferData> UniformBuffer<T> {
     pub fn new( device:&wgpu::Device, data : T, label: Option<&str>) -> Self 
     {
         let buffer = device.create_buffer_init(

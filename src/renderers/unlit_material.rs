@@ -1,4 +1,6 @@
-use crate::{buffers::{geometry::GeometryBuffer, uniform::{UnformBufferData, UniformBuffer}}, geometries::{ColorElement, PositionElement, TexCoordElement}, math::{mat4x4::Mat4x4, vec2::Vec2, vec4::Vec4}, texture2d::Texture2d};
+use glam::{Mat4, Vec2, Vec3, Vec4};
+
+use crate::{buffers::{geometry::GeometryBuffer, uniform::{UniformBufferData, UniformBuffer}}, geometries::{ColorElement, PositionElement, TexCoordElement}, texture2d::Texture2d};
 
 
 #[derive(Debug)]
@@ -7,13 +9,14 @@ pub struct UnlitMaterial{
     geometry_buffer : GeometryBuffer,
 
     texture_tiling_buffer : UniformBuffer<Vec2>,
-    model_matrix_buffer : UniformBuffer<Mat4x4>,
+    model_matrix_buffer : UniformBuffer<Mat4>,
     vs_uniforms_bind_group : wgpu::BindGroup,
 
     diffuse_color_buffer : UniformBuffer<Vec4>,
     diffuse_bind_group: wgpu::BindGroup,
     diffuse_color_bind_group: wgpu::BindGroup,
 }
+
 
 impl UnlitMaterial {
     pub fn new( device: &wgpu::Device, 
@@ -23,6 +26,11 @@ impl UnlitMaterial {
                 colors : &[ColorElement],
                 tex_coords : &[TexCoordElement],
                 indices : &[u32]) -> Self {
+
+
+
+        //let x = Vec3::new(1.0,2.0,3.1);
+        //dbg!(x.raw_view());
 
         let shader = device.create_shader_module(wgpu::include_wgsl!("./shaders/UnlitMaterialShader.wgsl"));
 
@@ -39,7 +47,7 @@ impl UnlitMaterial {
 
         let model_matrix_buffer = UniformBuffer::new(
             &device, 
-            Mat4x4::new(), 
+            Mat4::IDENTITY, 
             Some("Vertex model matrix uniform buffer"));
 
                 
@@ -233,7 +241,12 @@ impl UnlitMaterial {
         //self.textiling_buffer.data.x *= 1.01;
         //self.textiling_buffer.update(queue);
 
-        self.model_matrix_buffer.data.translate(0.5, 1.0, 0.0);
+        //self.model_matrix_buffer.data.translate(0.5, 1.0, 0.0);
+        let trans = Mat4::from_translation(Vec3::new(0.3, 0.5, 0.0)).transpose();
+        let rot = Mat4::from_axis_angle(Vec3::AXES[2], 20.0_f32.to_degrees() );
+        let scale = Mat4::from_scale(Vec3::new(2.0,0.4,1.0));
+        self.model_matrix_buffer.data =  scale * rot * trans;
+
         self.model_matrix_buffer.update(queue);
     }
 
