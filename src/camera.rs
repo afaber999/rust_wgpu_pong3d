@@ -1,4 +1,4 @@
-use glam::{Mat4, Vec3, Vec4};
+use glam::{Mat4, Vec3};
 use crate::buffers::uniform::UniformBuffer;
 
 #[derive(Debug)]
@@ -6,19 +6,34 @@ pub struct Camera {
     pub buffer : UniformBuffer<Mat4>,
     pub bind_group : wgpu::BindGroup,
     pub bind_group_layout : wgpu::BindGroupLayout,
+
+    proj_mat : Mat4,
+    pub eye : Vec3,
+    pub center : Vec3,
+    up : Vec3,
 }
 
 impl Camera {
 
+    fn proj_view_mat(proj_mat : &Mat4, eye : &Vec3, center: &Vec3, up: &Vec3) -> Mat4 {
+        let view_mat = Mat4::look_at_lh(*eye, *center, *up);
+        dbg!(view_mat);
+        proj_mat.mul_mat4(&view_mat)
+    }
+
     pub fn new(
         device: &wgpu::Device,
-        mat : Mat4,
+        proj_mat : Mat4,
+        eye : Vec3,
+        center : Vec3,
+        up : Vec3,
         label : &str ) -> Self {
+
 
         //dbg!(mat);
         let buffer = UniformBuffer::new(
             &device, 
-            mat, 
+            Self::proj_view_mat(&proj_mat, &eye, &center, &up), 
             Some( &format!( "Vertex uniform buffer for {label}") ));
                 
         let bind_group_layout = 
@@ -54,11 +69,16 @@ impl Camera {
             buffer,
             bind_group,
             bind_group_layout,
+            proj_mat,
+            eye,
+            center,
+            up,
         }
     }
 
-    pub fn update(&mut self, queue: &wgpu::Queue, mat : Mat4) {
-        self.buffer.data = mat;
+    pub fn update_projection(&mut self, queue: &wgpu::Queue, proj_mat : Mat4) {
+        self.proj_mat = proj_mat;
+        self.buffer.data = Self::proj_view_mat(&proj_mat, &self.eye, &self.center, &self.up); 
         self.buffer.update(queue);
     }
 

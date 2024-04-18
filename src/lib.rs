@@ -1,7 +1,7 @@
 
 
 use camera::Camera;
-use glam::Mat4;
+use glam::{Mat4, Vec3};
 use winit::{
     event::*,
     event_loop::{ControlFlow, EventLoop},
@@ -30,9 +30,9 @@ struct State {
 
     camera : Camera,
     renderer : renderers::unlit_material::UnlitMaterial,
-    renderer1 : renderers::unlit_material::UnlitMaterial,
     depth_texture : texture2d::Texture2d,
 
+    lv : f32,
     //render_pipeline : wgpu::RenderPipeline,
     window: Window,
 }
@@ -111,12 +111,13 @@ impl State {
 
         //let geo = QuadGeometry::new();
         let geo = CubeGeometry::new();
-
-
-                
+       
         let camera = Camera::new(
             &device,
             Self::camera_mat(size.width, size.height),
+            Vec3::new( 0.0, 3.0,0.0 ),
+            Vec3::new(0.0,0.0,3.0 ),
+            Vec3::Y,
             "Main camera" );
 
         let renderer = renderers::unlit_material::UnlitMaterial::new(
@@ -131,17 +132,6 @@ impl State {
                 0,
             );
 
-            let renderer1 = renderers::unlit_material::UnlitMaterial::new(
-                &device, 
-                &queue,
-                config.format, 
-                geo.positions,
-                geo.colors,
-                geo.tex_coords,
-                geo.indices,
-                &camera,
-                1,
-            );            
         Self {
             surface,
             device,
@@ -150,8 +140,8 @@ impl State {
             size,
             camera,
             renderer,
-            renderer1,
             depth_texture,
+            lv : 0.0,
             window,
         }
     }
@@ -167,7 +157,7 @@ impl State {
             self.config.width = new_size.width;
             self.config.height = new_size.height;
 
-            self.camera.update(
+            self.camera.update_projection(
                 &self.queue, 
                 Self::camera_mat(self.size.width, self.size.height));
 
@@ -184,8 +174,16 @@ impl State {
     }
 
     fn update(&mut self) {
+
+        self.lv += 0.01;
+        self.camera.center.z -= self.lv;
+
+        self.camera.update_projection(
+            &self.queue, 
+            Self::camera_mat(self.size.width, self.size.height));
+
+
         self.renderer.update(&self.queue);
-        self.renderer1.update(&self.queue);
     }
 
     fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
@@ -226,7 +224,6 @@ impl State {
             });
 
             self.renderer.draw(&mut render_pass, &self.camera);
-            self.renderer1.draw(&mut render_pass, &self.camera);
         }
 
         // submit will accept anything that implements IntoIter

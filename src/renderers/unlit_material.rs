@@ -250,16 +250,17 @@ impl UnlitMaterial {
         }
     }
 
+    
     pub fn update(&mut self, queue: &wgpu::Queue) {
         //self.textiling_buffer.data.x *= 1.01;
         //self.textiling_buffer.update(queue);
 
-        self.rot_angle += 0.5;
+        //self.rot_angle += 0.5;
 
         //self.model_matrix_buffer.data.translate(0.5, 1.0, 0.0);
         let trans = Mat4::from_translation(Vec3::new(0.5_f32 * self.instance as f32, 0.5_f32 * self.instance as f32, 3.0));
         //let trans = Mat4::from_translation(Vec3::new(0.0, 0.0, 3.0));
-        let rot = Mat4::from_axis_angle(Vec3::AXES[0], self.rot_angle.to_radians() );
+        let rot = Mat4::from_axis_angle(Vec3::X, self.rot_angle.to_radians() );
         let scale = Mat4::from_scale(Vec3::new(1.0,1.0,1.0));
         self.model_matrix_buffer.data =  trans * rot * scale;
         self.model_matrix_buffer.update(queue);

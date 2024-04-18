@@ -33,6 +33,7 @@ var<uniform> diffuse_color : vec4f;
 @vertex
 fn unlit_material_vs( in : VsInput ) -> VsOutput {
     var out : VsOutput;
+    // COLUMN MAJOR LH PROJECTION * VIEW * MODEL
     out.position =   view_projection * model_matrix * vec4f(in.position, 1.0);
     //out.position =   model_matrix * vec4f(in.position, 1.0);
     out.color = in.color;
