@@ -20,6 +20,7 @@ pub struct UnlitMaterial{
     diffuse_color_bind_group: wgpu::BindGroup,
 
     rot_angle : f32,
+    instance : usize,
 }
 
 
@@ -31,8 +32,10 @@ impl UnlitMaterial {
                 colors : &[ColorElement],
                 tex_coords : &[TexCoordElement],
                 indices : &[u32],
-                camera : &Camera ) -> Self {
+                camera : &Camera,
+                instance : usize ) -> Self {
 
+        
         let shader = device.create_shader_module(wgpu::include_wgsl!("./shaders/UnlitMaterialShader.wgsl"));
         let geometry_buffer = GeometryBuffer::new(&device, positions, colors, tex_coords, indices);
 
@@ -44,9 +47,10 @@ impl UnlitMaterial {
             Vec2::new(1.0,1.0), 
             Some("Vertex texture tiling uniform buffer"));
 
+
         let model_matrix_buffer = UniformBuffer::new(
             &device, 
-            Mat4::IDENTITY, 
+            Mat4::IDENTITY,
             Some("Vertex model matrix uniform buffer"));
 
                 
@@ -217,12 +221,11 @@ impl UnlitMaterial {
             
             primitive: Default::default(), 
 
-
             depth_stencil: Some(wgpu::DepthStencilState {
                 format: Texture2d::DEPTH_FORMAT,
                 depth_write_enabled: true,
-                depth_compare: wgpu::CompareFunction::Less, // 1.
-                stencil: wgpu::StencilState::default(), // 2.
+                depth_compare: wgpu::CompareFunction::Less,
+                stencil: wgpu::StencilState::default(),
                 bias: wgpu::DepthBiasState::default(),
             }),
 
@@ -243,6 +246,7 @@ impl UnlitMaterial {
             diffuse_color_bind_group,
 
             rot_angle : 0.0,
+            instance,
         }
     }
 
@@ -253,13 +257,12 @@ impl UnlitMaterial {
         self.rot_angle += 0.5;
 
         //self.model_matrix_buffer.data.translate(0.5, 1.0, 0.0);
-        let trans = Mat4::from_translation(Vec3::new(0.0, 0.0, 3.0));
+        let trans = Mat4::from_translation(Vec3::new(0.5_f32 * self.instance as f32, 0.5_f32 * self.instance as f32, 3.0));
+        //let trans = Mat4::from_translation(Vec3::new(0.0, 0.0, 3.0));
         let rot = Mat4::from_axis_angle(Vec3::AXES[0], self.rot_angle.to_radians() );
         let scale = Mat4::from_scale(Vec3::new(1.0,1.0,1.0));
         self.model_matrix_buffer.data =  trans * rot * scale;
-
         self.model_matrix_buffer.update(queue);
-
     }
 
     pub fn draw<'a>( &'a self, render_pass: &mut wgpu::RenderPass<'a>, camera:&'a Camera ) {

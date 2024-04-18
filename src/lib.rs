@@ -30,6 +30,7 @@ struct State {
 
     camera : Camera,
     renderer : renderers::unlit_material::UnlitMaterial,
+    renderer1 : renderers::unlit_material::UnlitMaterial,
     depth_texture : texture2d::Texture2d,
 
     //render_pipeline : wgpu::RenderPipeline,
@@ -126,8 +127,21 @@ impl State {
                 geo.colors,
                 geo.tex_coords,
                 geo.indices,
-                &camera);
+                &camera,
+                0,
+            );
 
+            let renderer1 = renderers::unlit_material::UnlitMaterial::new(
+                &device, 
+                &queue,
+                config.format, 
+                geo.positions,
+                geo.colors,
+                geo.tex_coords,
+                geo.indices,
+                &camera,
+                1,
+            );            
         Self {
             surface,
             device,
@@ -136,6 +150,7 @@ impl State {
             size,
             camera,
             renderer,
+            renderer1,
             depth_texture,
             window,
         }
@@ -170,6 +185,7 @@ impl State {
 
     fn update(&mut self) {
         self.renderer.update(&self.queue);
+        self.renderer1.update(&self.queue);
     }
 
     fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
@@ -210,6 +226,7 @@ impl State {
             });
 
             self.renderer.draw(&mut render_pass, &self.camera);
+            self.renderer1.draw(&mut render_pass, &self.camera);
         }
 
         // submit will accept anything that implements IntoIter
