@@ -3,7 +3,7 @@ use crate::{
     buffers::{geometry::GeometryBuffer, uniform::UniformBuffer},
     camera::Camera, 
     geometries::{ColorElement, PositionElement, TexCoordElement},
-    texture2d::Texture2d
+    texture2d::{self, Texture2d}
 };
 
 #[derive(Debug)]
@@ -18,6 +18,8 @@ pub struct UnlitMaterial{
     diffuse_color_buffer : UniformBuffer<Vec4>,
     diffuse_bind_group: wgpu::BindGroup,
     diffuse_color_bind_group: wgpu::BindGroup,
+
+    rot_angle : f32,
 }
 
 
@@ -29,7 +31,7 @@ impl UnlitMaterial {
                 colors : &[ColorElement],
                 tex_coords : &[TexCoordElement],
                 indices : &[u32],
-                camera : &Camera) -> Self {
+                camera : &Camera ) -> Self {
 
         let shader = device.create_shader_module(wgpu::include_wgsl!("./shaders/UnlitMaterialShader.wgsl"));
         let geometry_buffer = GeometryBuffer::new(&device, positions, colors, tex_coords, indices);
@@ -91,13 +93,12 @@ impl UnlitMaterial {
             label :Some( "Unlit material vs uniforms buffer group"),
         });
 
-
         //
         // DIFFUSE COLOR UNIFORM
         // 
         let diffuse_color_buffer = UniformBuffer::new(
             &device, 
-            Vec4::new(1.0,0.0, 0.0,1.0), 
+            Vec4::new(1.0,1.0, 1.0,1.0), 
             Some("diffuse color buffer"));
 
 
@@ -213,8 +214,18 @@ impl UnlitMaterial {
                     write_mask: wgpu::ColorWrites::ALL,
                 })],
             }),
+            
             primitive: Default::default(), 
-            depth_stencil: Default::default(),
+
+
+            depth_stencil: Some(wgpu::DepthStencilState {
+                format: Texture2d::DEPTH_FORMAT,
+                depth_write_enabled: true,
+                depth_compare: wgpu::CompareFunction::Less, // 1.
+                stencil: wgpu::StencilState::default(), // 2.
+                bias: wgpu::DepthBiasState::default(),
+            }),
+
             multisample: Default::default(),
             multiview: Default::default(),
         });
@@ -230,6 +241,8 @@ impl UnlitMaterial {
             diffuse_color_buffer,
             diffuse_bind_group,
             diffuse_color_bind_group,
+
+            rot_angle : 0.0,
         }
     }
 
@@ -237,12 +250,13 @@ impl UnlitMaterial {
         //self.textiling_buffer.data.x *= 1.01;
         //self.textiling_buffer.update(queue);
 
+        self.rot_angle += 0.5;
+
         //self.model_matrix_buffer.data.translate(0.5, 1.0, 0.0);
-        let trans = Mat4::from_translation(Vec3::new(-0.5, 0.0, 0.0));
-        // let rot = Mat4::from_axis_angle(Vec3::AXES[2], 20.0_f32.to_degrees() );
-        // let scale = Mat4::from_scale(Vec3::new(2.0,0.4,1.0));
-        // self.model_matrix_buffer.data =  trans * rot * scale;
-        self.model_matrix_buffer.data =  trans;
+        let trans = Mat4::from_translation(Vec3::new(0.0, 0.0, 3.0));
+        let rot = Mat4::from_axis_angle(Vec3::AXES[0], self.rot_angle.to_radians() );
+        let scale = Mat4::from_scale(Vec3::new(1.0,1.0,1.0));
+        self.model_matrix_buffer.data =  trans * rot * scale;
 
         self.model_matrix_buffer.update(queue);
 
@@ -266,7 +280,6 @@ impl UnlitMaterial {
         } else {
             render_pass.draw(0..self.geometry_buffer.num_vertices, 0..1); // draw 3 vertices with pipeline    
         }
-
     }
 
 }

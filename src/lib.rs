@@ -1,6 +1,7 @@
 
 
 use camera::Camera;
+use glam::Mat4;
 use winit::{
     event::*,
     event_loop::{ControlFlow, EventLoop},
@@ -17,7 +18,7 @@ pub mod renderers;
 pub mod texture2d;
 pub mod camera;
 
-use geometries::QuadGeometry;
+use geometries::{CubeGeometry, QuadGeometry};
 
 
 struct State {
@@ -29,11 +30,30 @@ struct State {
 
     camera : Camera,
     renderer : renderers::unlit_material::UnlitMaterial,
+    depth_texture : texture2d::Texture2d,
+
     //render_pipeline : wgpu::RenderPipeline,
     window: Window,
 }
 
+
 impl State {
+
+    fn camera_mat(width: u32, height: u32) -> Mat4 {
+        // let mat = Mat4::orthographic_lh(
+        //     -1.0,1.0,
+        //     -1.0,1.0,
+        //     0.0,1.0 );
+
+        let fov = 90.0_f32.to_radians();
+        let z_near = 0.01_f32;
+        let z_far = 5_f32;
+        let aspect_ratio  = width as f32 / height as f32;
+
+        Mat4::perspective_lh(
+            fov, aspect_ratio,
+            z_near, z_far)
+    }
 
     async fn new(window: Window) -> Self {
         let size = window.inner_size();
@@ -83,13 +103,20 @@ impl State {
         };
         surface.configure(&device, &config);
 
-        let geo = QuadGeometry::new();
 
-        let camera = Camera::new_orthographic(
+        // DEPTH buffer
+        let depth_texture = texture2d::Texture2d::create_depth_texture(&device, &config, "depth_texture");
+
+
+        //let geo = QuadGeometry::new();
+        let geo = CubeGeometry::new();
+
+
+                
+        let camera = Camera::new(
             &device,
-        -1.0,1.0,
-            -1.0,1.0,
-        0.0,1.0);
+            Self::camera_mat(size.width, size.height),
+            "Main camera" );
 
         let renderer = renderers::unlit_material::UnlitMaterial::new(
                 &device, 
@@ -109,6 +136,7 @@ impl State {
             size,
             camera,
             renderer,
+            depth_texture,
             window,
         }
     }
@@ -123,7 +151,16 @@ impl State {
             self.size = new_size;
             self.config.width = new_size.width;
             self.config.height = new_size.height;
+
+            self.camera.update(
+                &self.queue, 
+                Self::camera_mat(self.size.width, self.size.height));
+
             self.surface.configure(&self.device, &self.config);
+            self.depth_texture = texture2d::Texture2d::create_depth_texture(
+                &self.device, 
+                &self.config,
+                "depth_texture");
         }
     }
 
@@ -132,7 +169,6 @@ impl State {
     }
 
     fn update(&mut self) {
-        self.camera.update(&self.queue);
         self.renderer.update(&self.queue);
     }
 
@@ -162,8 +198,14 @@ impl State {
                         store: wgpu::StoreOp::Store,
                     },
                 })],
-                depth_stencil_attachment: None,
-                occlusion_query_set: None,
+                depth_stencil_attachment: Some(wgpu::RenderPassDepthStencilAttachment {
+                    view: &self.depth_texture.view,
+                    depth_ops: Some(wgpu::Operations {
+                        load: wgpu::LoadOp::Clear(1.0),
+                        store: wgpu::StoreOp::Store,
+                    }),
+                    stencil_ops: None,
+                }),                occlusion_query_set: None,
                 timestamp_writes: None,
             });
 
@@ -184,7 +226,7 @@ pub async fn run() {
     let event_loop = EventLoop::new();
     let window = WindowBuilder::new().build(&event_loop).unwrap();
 
-    let mut state = State::new(window).await;    
+    let mut state = State::new(window).await;
 
     event_loop.run(move |event, _, control_flow| match event {
 

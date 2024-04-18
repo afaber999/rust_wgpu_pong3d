@@ -9,23 +9,17 @@ pub struct Camera {
 }
 
 impl Camera {
-    pub fn new_orthographic(
+
+    pub fn new(
         device: &wgpu::Device,
-        left : f32,
-        right : f32,
-        bottom : f32,
-        top : f32,
-        near : f32,
-        far : f32) -> Self {
+        mat : Mat4,
+        label : &str ) -> Self {
 
-        let mat = Mat4::orthographic_lh(left, right, bottom, top, near, far); 
-        //dbg!(mat);   
-
+        //dbg!(mat);
         let buffer = UniformBuffer::new(
             &device, 
             mat, 
-            Some("Vertex model matrix uniform buffer"));
-
+            Some( &format!( "Vertex uniform buffer for {label}") ));
                 
         let bind_group_layout = 
             device.create_bind_group_layout(&wgpu::BindGroupLayoutDescriptor {
@@ -63,12 +57,9 @@ impl Camera {
         }
     }
 
-    pub fn update(&mut self, queue: &wgpu::Queue) {
-        // let trans = Mat4::from_translation(Vec3::new(0.3, 0.5, 0.0));
-        // let rot = Mat4::from_axis_angle(Vec3::AXES[2], 20.0_f32.to_degrees() );
-        // let scale = Mat4::from_scale(Vec3::new(2.0,0.4,1.0));
-        // self.buffer.data =  trans * rot * scale;
-        // self.buffer.update(queue);
+    pub fn update(&mut self, queue: &wgpu::Queue, mat : Mat4) {
+        self.buffer.data = mat;
+        self.buffer.update(queue);
     }
 
     pub fn draw<'a>( &'a self, render_pass: &mut wgpu::RenderPass<'a>, bind_group_nr : u32 ) {
