@@ -29,7 +29,7 @@ struct State {
     size: winit::dpi::PhysicalSize<u32>,
 
     camera : Camera,
-    renderer : renderers::unlit_material::UnlitMaterial,
+    renderer : renderers::material_shader::MaterialShader,
     depth_texture : texture2d::Texture2d,
 
     lv : f32,
@@ -104,7 +104,6 @@ impl State {
         };
         surface.configure(&device, &config);
 
-
         // DEPTH buffer
         let depth_texture = texture2d::Texture2d::create_depth_texture(&device, &config, "depth_texture");
 
@@ -115,12 +114,12 @@ impl State {
         let camera = Camera::new(
             &device,
             Self::camera_mat(size.width, size.height),
-            Vec3::new( 0.0, 3.0,0.0 ),
+            Vec3::new( 0.0, 0.0,0.0 ),
             Vec3::new(0.0,0.0,3.0 ),
             Vec3::Y,
             "Main camera" );
 
-        let renderer = renderers::unlit_material::UnlitMaterial::new(
+        let renderer = renderers::material_shader::MaterialShader::new(
                 &device, 
                 &queue,
                 config.format, 
@@ -129,7 +128,6 @@ impl State {
                 geo.tex_coords,
                 geo.indices,
                 &camera,
-                0,
             );
 
         Self {
@@ -175,12 +173,12 @@ impl State {
 
     fn update(&mut self) {
 
-        self.lv += 0.01;
-        self.camera.center.z -= self.lv;
+        // self.lv += 0.01;
+        // self.camera.center.z -= self.lv;
 
-        self.camera.update_projection(
-            &self.queue, 
-            Self::camera_mat(self.size.width, self.size.height));
+        // self.camera.update_projection(
+        //     &self.queue, 
+        //     Self::camera_mat(self.size.width, self.size.height));
 
 
         self.renderer.update(&self.queue);
