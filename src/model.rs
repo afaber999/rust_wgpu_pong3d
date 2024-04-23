@@ -67,6 +67,8 @@ impl Model {
 
         let mut geos = Vec::new();
 
+        dbg!(models.len());
+        
         for model in models.into_iter(){
             let mesh = &model.mesh;
             

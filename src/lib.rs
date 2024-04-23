@@ -33,7 +33,7 @@ struct State {
     size: winit::dpi::PhysicalSize<u32>,
 
     camera : Camera,
-    renderer : renderers::material_shader::MaterialShader,
+    renderers : Vec<renderers::material_shader::MaterialShader>,
     depth_texture : texture2d::Texture2d,
 
     lv : f32,
@@ -63,7 +63,10 @@ impl State {
     async fn new(window: Window) -> Self {
         let size = window.inner_size();
 
-        let mm = Model::new("./src/assets/cube/cube.obj");
+        //let mm = Model::new("./src/assets/cube/cube.obj");
+        //let mm = Model::new("./src/assets/models/teacup.obj");
+        //let mm = Model::new("./src/assets/models/suzanne.obj");
+        let mm = Model::new("./src/assets/models/spoon.obj");
 
         dbg!(mm.positions.len());
         dbg!(mm.colors.len());
@@ -131,17 +134,18 @@ impl State {
             Vec3::Y,
             "Main camera" );
 
-        let renderer = renderers::material_shader::MaterialShader::new(
-                &device, 
-                &queue,
-                config.format, 
-                &mm.positions,
-                &mm.normals,
-                &mm.colors,
-                &mm.tex_coords,
-                &mm.indices,
-                &camera,
-            );
+        let mut renderers = Vec::new();
+        renderers.push( renderers::material_shader::MaterialShader::new(
+            &device, 
+            &queue,
+            config.format, 
+            &mm.positions,
+            &mm.normals,
+            &mm.colors,
+            &mm.tex_coords,
+            &mm.indices,
+            &camera,
+        ));
 
         Self {
             surface,
@@ -150,7 +154,7 @@ impl State {
             config,
             size,
             camera,
-            renderer,
+            renderers,
             depth_texture,
             lv : 0.0,
             window,
@@ -193,8 +197,9 @@ impl State {
         //     &self.queue, 
         //     Self::camera_mat(self.size.width, self.size.height));
 
-
-        self.renderer.update(&self.queue);
+        self.renderers.iter_mut().for_each( |r| 
+            r.update(&self.queue)
+        );
     }
 
     fn render(&mut self) -> Result<(), wgpu::SurfaceError> {
@@ -234,7 +239,9 @@ impl State {
                 timestamp_writes: None,
             });
 
-            self.renderer.draw(&mut render_pass, &self.camera);
+            self.renderers.iter().for_each( |r| 
+                r.draw(&mut render_pass, &self.camera)
+            );
         }
 
         // submit will accept anything that implements IntoIter
