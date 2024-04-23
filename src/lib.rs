@@ -17,6 +17,10 @@ pub mod geometries;
 pub mod renderers;
 pub mod texture2d;
 pub mod camera;
+pub mod model;
+
+use model::Model;
+
 
 use geometries::{CubeGeometry, QuadGeometry};
 
@@ -58,6 +62,14 @@ impl State {
 
     async fn new(window: Window) -> Self {
         let size = window.inner_size();
+
+        let mm = Model::new("./src/assets/cube/cube.obj");
+
+        dbg!(mm.positions.len());
+        dbg!(mm.colors.len());
+        dbg!(mm.tex_coords.len());
+        dbg!(mm.normals.len());
+        dbg!(mm.indices.len());
 
         let instance = wgpu::Instance::new(wgpu::InstanceDescriptor {
             backends: wgpu::Backends::all(),
@@ -123,10 +135,11 @@ impl State {
                 &device, 
                 &queue,
                 config.format, 
-                geo.positions,
-                geo.colors,
-                geo.tex_coords,
-                geo.indices,
+                &mm.positions,
+                &mm.normals,
+                &mm.colors,
+                &mm.tex_coords,
+                &mm.indices,
                 &camera,
             );
 

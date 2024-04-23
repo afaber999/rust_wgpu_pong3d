@@ -1,5 +1,5 @@
 use wgpu::util::DeviceExt;
-use crate::geometries::{ColorElement, PositionElement, TexCoordElement};
+use crate::geometries::{ColorElement, NormalElement, PositionElement, TexCoordElement};
 //use super::super::geometries::Vertex;
 
 #[derive(Debug)]
@@ -8,6 +8,7 @@ pub struct GeometryBuffer {
     pub color_buffer : wgpu::Buffer,
     pub texcoord_buffer : wgpu::Buffer,
     pub index_buffer : Option<wgpu::Buffer>,
+    pub normal_buffer : Option<wgpu::Buffer>,
     pub num_vertices : u32,
     pub num_indices : u32,
 
@@ -16,6 +17,7 @@ pub struct GeometryBuffer {
 impl GeometryBuffer {
     pub fn new(device : &wgpu::Device,
          positions : &[PositionElement], 
+         normals : &[NormalElement], 
          colors : &[ColorElement],
          tex_coords : &[TexCoordElement],
          indices : &[u32] ) -> Self {
@@ -29,6 +31,18 @@ impl GeometryBuffer {
             }
         );
         let num_vertices = positions.len() as u32;
+
+        let normal_buffer = if normals.len() > 0 {
+            // create index buffer
+            Some( device.create_buffer_init(
+        &wgpu::util::BufferInitDescriptor {
+                    label: Some("Normals Buffer"),
+                    contents: bytemuck::cast_slice(normals),
+                    usage: wgpu::BufferUsages::VERTEX,
+                }))
+        } else {
+            None
+        };
 
         // create vertex buffer for colors
         let color_buffer = device.create_buffer_init(
@@ -60,10 +74,14 @@ impl GeometryBuffer {
             None
         };
 
+
+
+
         let num_indices = indices.len() as u32;
 
         Self {
             position_buffer,
+            normal_buffer,
             texcoord_buffer,
             color_buffer,
             index_buffer,

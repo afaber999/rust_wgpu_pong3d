@@ -3,7 +3,7 @@ use glam::{Mat4, Vec3};
 use crate::{
     buffers::{geometry::GeometryBuffer, uniform::UniformBuffer},
     camera::Camera, 
-    geometries::{ColorElement, PositionElement, TexCoordElement},
+    geometries::{ColorElement, NormalElement, PositionElement, TexCoordElement},
     texture2d::Texture2d
 };
 
@@ -32,6 +32,7 @@ impl MaterialShader {
                 queue: &wgpu::Queue,
                 format: wgpu::TextureFormat, 
                 positions : &[PositionElement],
+                normals : &[NormalElement],
                 colors : &[ColorElement],
                 tex_coords : &[TexCoordElement],
                 indices : &[u32],
@@ -39,7 +40,13 @@ impl MaterialShader {
 
         
         let shader = device.create_shader_module(wgpu::include_wgsl!("./shaders/MaterialShader.wgsl"));
-        let geometry_buffer = GeometryBuffer::new(&device, positions, colors, tex_coords, indices);
+        let geometry_buffer = GeometryBuffer::new(
+            &device,
+            positions,
+            normals,
+            colors,
+            tex_coords,
+            indices);
 
         //
         // SETUP VERTEX UNIFORMS
@@ -182,7 +189,8 @@ impl MaterialShader {
                 buffers: &[
                     PositionElement::desc::<0>(),
                     ColorElement::desc::<1>(),
-                    TexCoordElement::desc::<2>() ],
+                    TexCoordElement::desc::<2>(),
+                    NormalElement::desc::<3>() ],
             },
             fragment: Some(wgpu::FragmentState {
                 module: &shader,
@@ -225,7 +233,7 @@ impl MaterialShader {
 
     
     pub fn update(&mut self, queue: &wgpu::Queue) {
-        //self.rot_angle += 0.5;
+        self.rot_angle += 0.5;
         let trans = Mat4::from_translation(Vec3::new(0.0_f32, 0.0_f32, 3.0));
         let rot = Mat4::from_axis_angle(Vec3::X, self.rot_angle.to_radians() );
         let scale = Mat4::from_scale(Vec3::new(1.0,1.0,1.0));
@@ -243,6 +251,10 @@ impl MaterialShader {
         render_pass.set_vertex_buffer(0, self.geometry_buffer.position_buffer.slice(..));
         render_pass.set_vertex_buffer(1, self.geometry_buffer.color_buffer.slice(..));
         render_pass.set_vertex_buffer(2, self.geometry_buffer.texcoord_buffer.slice(..));
+
+        if let Some(normal_buffer) = &self.geometry_buffer.normal_buffer {
+            render_pass.set_vertex_buffer(3, normal_buffer.slice(..));
+        }
 
         if let Some(index_buffer) = &self.geometry_buffer.index_buffer {
             render_pass.set_index_buffer(index_buffer.slice(..), wgpu::IndexFormat::Uint32);

@@ -37,7 +37,13 @@ impl UnlitMaterial {
 
         
         let shader = device.create_shader_module(wgpu::include_wgsl!("./shaders/UnlitMaterialShader.wgsl"));
-        let geometry_buffer = GeometryBuffer::new(&device, positions, colors, tex_coords, indices);
+        let geometry_buffer = GeometryBuffer::new(
+            &device,
+            positions,
+            &[],
+            colors,
+            tex_coords,
+            indices);
 
         //
         // SETUP VERTEX UNIFORMS

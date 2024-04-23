@@ -17,7 +17,7 @@ impl Camera {
 
     fn proj_view_mat(proj_mat : &Mat4, eye : &Vec3, center: &Vec3, up: &Vec3) -> Mat4 {
         let view_mat = Mat4::look_at_lh(*eye, *center, *up);
-        dbg!(view_mat);
+        //dbg!(view_mat);
         proj_mat.mul_mat4(&view_mat)
     }
 

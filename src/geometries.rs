@@ -1,9 +1,32 @@
 #[repr(C)]
 #[derive(Default, Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct PositionElement {
-    position: [f32; 3],
+    pub position: [f32; 3],
 }
 impl PositionElement {   
+    pub fn desc<const N: u32>() -> wgpu::VertexBufferLayout<'static> {
+        wgpu::VertexBufferLayout {
+            array_stride: std::mem::size_of::<Self>() as wgpu::BufferAddress,
+            step_mode: wgpu::VertexStepMode::Vertex,
+            attributes: &[
+                wgpu::VertexAttribute {
+                    offset: 0,
+                    shader_location: N,
+                    format: wgpu::VertexFormat::Float32x3,
+                },
+            ]
+        }
+
+    }
+}
+
+
+#[repr(C)]
+#[derive(Default, Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
+pub struct NormalElement {
+    pub normal: [f32; 3],
+}
+impl NormalElement {   
     pub fn desc<const N: u32>() -> wgpu::VertexBufferLayout<'static> {
         wgpu::VertexBufferLayout {
             array_stride: std::mem::size_of::<Self>() as wgpu::BufferAddress,
@@ -23,7 +46,7 @@ impl PositionElement {
 #[repr(C)]
 #[derive(Default, Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct ColorElement {
-    color: [f32; 4],
+    pub color: [f32; 4],
 }
 impl ColorElement {   
     pub fn desc<const N: u32>() -> wgpu::VertexBufferLayout<'static> {
@@ -45,7 +68,7 @@ impl ColorElement {
 #[repr(C)]
 #[derive(Default, Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct TexCoordElement {
-    position: [f32; 2],
+    pub position: [f32; 2],
 }
 
 impl TexCoordElement {   
@@ -73,6 +96,14 @@ pub const QUAD_POSITIONS: &[PositionElement] = &[
     PositionElement { position: [ 0.5,  0.5, 0.0] },    // top right
 ];
 
+pub const QUAD_NORMALS: &[NormalElement] = &[
+    NormalElement { normal: [ 0.0,  0.0,-1.0] },    // bottom left
+    NormalElement { normal: [ 0.0,  0.0,-1.0] },    // top left
+    NormalElement { normal: [ 0.0,  0.0,-1.0] },    // bottom right
+    NormalElement { normal: [ 0.0,  0.0,-1.0] },    // top right
+];
+
+
 pub const QUAD_COLORS: &[ColorElement] = &[
     ColorElement { color: [1.0, 0.0, 0.0, 1.0] },    // bottom left
     ColorElement { color: [0.0, 1.0, 0.0, 1.0] },    // top left
@@ -98,6 +129,7 @@ pub struct QuadGeometry<'a> {
     pub positions : &'a[PositionElement],
     pub colors : &'a[ColorElement],
     pub tex_coords : &'a[TexCoordElement],
+    pub normals : &'a[NormalElement],
     pub indices : &'a[u32],
 }
 
@@ -107,6 +139,7 @@ impl<'a> QuadGeometry<'a> {
             positions : &QUAD_POSITIONS,
             colors : &QUAD_COLORS,
             indices : &QUAD_INDICES,
+            normals : &QUAD_NORMALS,
             tex_coords : &QUAD_TEXCOORDS,
         }
     }
@@ -116,16 +149,16 @@ impl<'a> QuadGeometry<'a> {
 // create array with position and position data
 pub const CUBE_POSITIONS: &[PositionElement] = &[
     // FRONT
-    PositionElement { position: [-0.5, -0.5, 0.5] },    // bottom left
-    PositionElement { position: [-0.5,  0.5, 0.5] },    // top left
-    PositionElement { position: [ 0.5, -0.5, 0.5] },    // bottom right
-    PositionElement { position: [ 0.5,  0.5, 0.5] },    // top right
-
-    // BACK
     PositionElement { position: [-0.5, -0.5, -0.5] },    // bottom left
     PositionElement { position: [-0.5,  0.5, -0.5] },    // top left
     PositionElement { position: [ 0.5, -0.5, -0.5] },    // bottom right
     PositionElement { position: [ 0.5,  0.5, -0.5] },    // top right
+
+    // BACK
+    PositionElement { position: [-0.5, -0.5, 0.5] },    // bottom left
+    PositionElement { position: [-0.5,  0.5, 0.5] },    // top left
+    PositionElement { position: [ 0.5, -0.5, 0.5] },    // bottom right
+    PositionElement { position: [ 0.5,  0.5, 0.5] },    // top right
 
     // LEFT
     PositionElement { position: [-0.5, -0.5, -0.5] },    // bottom left
@@ -150,6 +183,46 @@ pub const CUBE_POSITIONS: &[PositionElement] = &[
     PositionElement { position: [-0.5,  -0.5,  0.5] },    // top left
     PositionElement { position: [ 0.5,  -0.5, -0.5] },    // bottom right
     PositionElement { position: [ 0.5,  -0.5,  0.5] },    // top right
+
+    ];
+
+// create array with position and position data
+pub const CUBE_NORMALS: &[NormalElement] = &[
+    // FRONT
+    NormalElement { normal: [ 0.0,  0.0, -1.0] },    // bottom left
+    NormalElement { normal: [ 0.0,  0.0, -1.0] },    // top left
+    NormalElement { normal: [ 0.0,  0.0, -1.0] },    // bottom right
+    NormalElement { normal: [ 0.0,  0.0, -1.0] },    // top right
+
+    // BACK
+    NormalElement { normal: [ 0.0,  0.0,  1.0] },    // bottom left
+    NormalElement { normal: [ 0.0,  0.0,  1.0] },    // top left
+    NormalElement { normal: [ 0.0,  0.0,  1.0] },    // bottom right
+    NormalElement { normal: [ 0.0,  0.0,  1.0] },    // top right
+
+    // LEFT
+    NormalElement { normal: [-1.0,  0.0,  0.0] },    // bottom left
+    NormalElement { normal: [-1.0,  0.0,  0.0] },    // top left
+    NormalElement { normal: [-1.0,  0.0,  0.0] },    // bottom right
+    NormalElement { normal: [-1.0,  0.0,  0.0] },    // top right
+
+    // RIGHT
+    NormalElement { normal: [ 1.0,  0.0,  0.0] },    // bottom left
+    NormalElement { normal: [ 1.0,  0.0,  0.0] },    // top left
+    NormalElement { normal: [ 1.0,  0.0,  0.0] },    // bottom right
+    NormalElement { normal: [ 1.0,  0.0,  0.0] },    // top right
+
+    // TOP
+    NormalElement { normal: [ 0.0,  1.0,  0.0] },    // bottom left
+    NormalElement { normal: [ 0.0,  1.0,  0.0] },    // top left
+    NormalElement { normal: [ 0.0,  1.0,  0.0] },    // bottom right
+    NormalElement { normal: [ 0.0,  1.0,  0.0] },    // top right
+
+    // BOTTOM
+    NormalElement { normal: [ 0.0, -1.0,  0.0] },    // bottom left
+    NormalElement { normal: [ 0.0, -1.0,  0.0] },    // top left
+    NormalElement { normal: [ 0.0, -1.0,  0.0] },    // bottom right
+    NormalElement { normal: [ 0.0, -1.0,  0.0] },    // top right
 
     ];
 
@@ -252,6 +325,7 @@ pub const CUBE_POSITIONS: &[PositionElement] = &[
     pub struct CubeGeometry<'a> {
         pub positions : &'a[PositionElement],
         pub colors : &'a[ColorElement],
+        pub normals : &'a[NormalElement],
         pub tex_coords : &'a[TexCoordElement],
         pub indices : &'a[u32],
     }
@@ -260,6 +334,7 @@ pub const CUBE_POSITIONS: &[PositionElement] = &[
         pub fn new() -> Self {
             Self {
                 positions : &CUBE_POSITIONS,
+                normals : &CUBE_NORMALS,
                 colors : &CUBE_COLORS,
                 indices : &CUBE_INDICES,
                 tex_coords : &CUBE_TEXCOORDS,
