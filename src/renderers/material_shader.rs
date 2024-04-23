@@ -89,10 +89,11 @@ impl MaterialShader {
         //
         // MATERIAL BUFFER SETUP
         // 
-        let material = Material::new(
+        let mut material = Material::new(
             Vec3::new(0.5,0.2,0.1),
             Vec3::new(0.3,0.0,0.3),
             Vec3::new(0.5,0.2,0.1));
+        material.diffuse_intensity = 2.0;
 
         let label = "Material shader material buffer";
         let material_buffer = MaterialBuffer::new(&device,material, label);
@@ -194,7 +195,8 @@ impl MaterialShader {
             },
             fragment: Some(wgpu::FragmentState {
                 module: &shader,
-                entry_point: "material_fs",
+                //entry_point: "material_fs",
+                entry_point: "material_flat_fs",
                 targets: &[Some(wgpu::ColorTargetState {
                     format: format,
                     blend: Some(wgpu::BlendState::REPLACE),

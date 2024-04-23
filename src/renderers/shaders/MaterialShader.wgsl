@@ -14,8 +14,11 @@ struct VsOutput {
 
 struct Material {
     @location(0) ambient_color : vec3f,
-    @location(1) diffuse_color : vec3f,
-    @location(2) specular_color : vec3f,
+    @location(1) ambient_intensity : f32,
+    @location(2) diffuse_color : vec3f,
+    @location(3) diffuse_intensity : f32,
+    @location(4) specular_color : vec3f,
+    @location(5) specular_intensity : f32,
 }
 
 @group(0) @binding(0)
@@ -49,7 +52,17 @@ fn material_vs( in : VsInput ) -> VsOutput {
 @fragment
 fn material_fs( in: VsOutput ) -> @location(0) vec4f {
     //return vec4f(in.texcoord.x,in.texcoord.y,0.0,1.0);
-    return textureSample(t_diffuse, s_diffuse, in.texcoord) * vec4f(abs( in.normal ), 1.0);
+    //return textureSample(t_diffuse, s_diffuse, in.texcoord) * vec4f(abs( in.normal ), 1.0);
     //return vec4f( material.diffuse_color, 1.0);
+    return vec4f(abs( in.normal ), 1.0);
+//    return textureSample(t_diffuse, s_diffuse, in.texcoord);
+}
+
+@fragment
+fn material_flat_fs( in: VsOutput ) -> @location(0) vec4f {
+    //return vec4f(in.texcoord.x,in.texcoord.y,0.0,1.0);
+    //return textureSample(t_diffuse, s_diffuse, in.texcoord) * vec4f(abs( in.normal ), 1.0);
+    return vec4f( material.diffuse_color * material.diffuse_intensity, 1.0);
+    //return vec4f(abs( in.normal ), 1.0);
 //    return textureSample(t_diffuse, s_diffuse, in.texcoord);
 }

@@ -65,8 +65,8 @@ impl State {
 
         //let mm = Model::new("./src/assets/cube/cube.obj");
         //let mm = Model::new("./src/assets/models/teacup.obj");
-        //let mm = Model::new("./src/assets/models/suzanne.obj");
-        let mm = Model::new("./src/assets/models/spoon.obj");
+        let mm = Model::new("./src/assets/models/suzanne.obj");
+        //let mm = Model::new("./src/assets/models/spoon.obj");
 
         dbg!(mm.positions.len());
         dbg!(mm.colors.len());
@@ -142,7 +142,7 @@ impl State {
             &mm.positions,
             &mm.normals,
             &mm.colors,
-            &mm.tex_coords,
+            &[],//&mm.tex_coords,
             &mm.indices,
             &camera,
         ));

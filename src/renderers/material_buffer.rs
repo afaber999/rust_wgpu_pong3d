@@ -6,13 +6,13 @@ use crate::buffers::uniform::{UniformBuffer, UniformBufferData};
 #[repr(C)]
 #[derive(Default, Copy, Clone, Debug, bytemuck::Pod, bytemuck::Zeroable)]
 pub struct Material {
-    pub ambient_color :Vec3,
     // Due to uniforms requiring 16 byte (4 float) spacing, we need to use a padding field here
-    _padding0 : u32,
+    pub ambient_color :Vec3,
+    pub ambient_intensity : f32,
     pub diffuse_color :Vec3,
-    _padding1 : u32,
+    pub diffuse_intensity : f32,
     pub specular_color :Vec3,
-    _padding2 : u32,
+    pub specular_intensity : f32,
 }
 
 
@@ -22,9 +22,9 @@ impl Material {
             ambient_color,
             diffuse_color,
             specular_color,
-            _padding0: 0, 
-            _padding1: 0,
-            _padding2: 0,
+            ambient_intensity :1.0,
+            diffuse_intensity :1.0,
+            specular_intensity :1.0,
         }
     }
 }

@@ -68,10 +68,13 @@ impl Model {
         let mut geos = Vec::new();
 
         dbg!(models.len());
-        
+
+        dbg!(materials_result);
+
         for model in models.into_iter(){
             let mesh = &model.mesh;
-            
+
+            dbg!( mesh.material_id );           
             let positions:Vec<PositionElement> = mesh.positions.
                 chunks(3).
                 map(  | f| {
